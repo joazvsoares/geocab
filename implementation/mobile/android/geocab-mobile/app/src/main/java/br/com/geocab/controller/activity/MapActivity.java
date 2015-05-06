@@ -1,5 +1,6 @@
 package br.com.geocab.controller.activity;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -7,6 +8,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.drawable.AnimationDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.ActionBarDrawerToggle;
@@ -17,6 +19,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebSettings.RenderPriority;
@@ -128,6 +131,7 @@ public class MapActivity extends Activity
      *
      * @param savedInstanceState
      */
+    @SuppressLint("JavascriptInterface")
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -135,7 +139,7 @@ public class MapActivity extends Activity
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         setContentView(R.layout.activity_map);
 
@@ -150,10 +154,11 @@ public class MapActivity extends Activity
         webViewMap.setWebChromeClient(new WebChromeClient());
         webViewMap.loadUrl("file:///android_asset/map.html");
 
-        //String html = "<html><head><link rel=stylesheet href=ol.css type=text/css><style>div.map{height:100%;width:100%}.ol-attribution button,.ol-attribution u,.ol-zoom{display:none}</style><script src=ol.js type=text/javascript></script><script src=jquery.min.js type=text/javascript></script><meta name=viewport content=\"width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no\"><body style=margin:0><div id=map class=\"map\"><script type=text/javascript>function showLayer(e,r,a,o){if(\"true\"==o){var t=new ol.source.TileWMS({url:e,params:{LAYERS:r}}),n=new ol.layer.Tile({source:t});map.addLayer(n),layersAdd.push({wmsLayer:n,wmsSource:t,name:r,title:a})}else for(i in layersAdd)layersAdd[i].name==r&&(map.removeLayer(layersAdd[i].wmsLayer),layersAdd.splice(i,1))}function showMarker(e,r,a,o,t,n,l){var s=new ol.Feature({geometry:new ol.geom.Point([e,r]),layerName:n,markerId:a,markerUser:o,markerDate:t}),i=new ol.style.Style({image:new ol.style.Icon({size:[25,25],src:\"file:///android_res/drawable/\"+l+\".png\"})}),m=new ol.source.Vector({features:[s]}),d=new ol.layer.Vector({source:m,style:i});map.addLayer(d),markersAdd.push({vectorLayer:d,name:n})}function closeMarker(e){for(i in markersAdd)markersAdd[i].name==e&&map.removeLayer(markersAdd[i].vectorLayer)}function zoomToArea(e,r){var a=ol.animation.pan({source:view.getCenter()}),o=ol.proj.transform([r,e],\"EPSG:4326\",\"EPSG:3857\");map.beforeRender(a),view.setCenter(o),view.setZoom(18)}var layersAdd=[],markersAdd=[],view=new ol.View({center:ol.proj.transform([-54.1394,-24.7568],\"EPSG:4326\",\"EPSG:3857\"),zoom:7});map=new ol.Map({target:\"map\",layers:[new ol.layer.Tile({source:new ol.source.OSM})],interactions:ol.interaction.defaults({altShiftDragRotate:!1,pinchRotate:!1,keyboard:!1}),view:view,control:ol.control.defaults({rotate:!1})}),map.on(\"click\",function(e){app.vibrateOnSelect();var r=map.forEachFeatureAtPixel(e.pixel,function(e){return e}),a=[],o=[];if(layersAdd.length>0)for(var t in layersAdd){var n=layersAdd[t].wmsSource.getGetFeatureInfoUrl(e.coordinate,view.getResolution(),view.getProjection(),{INFO_FORMAT:\"application/json\"});a.push(decodeURIComponent(n)),o.push(layersAdd[t].title)}r&&a.length>0?app.showInformation(parseInt(r.getProperties().markerId),r.getProperties().markerUser,r.getProperties().markerDate,r.getProperties().layerName,a,o):!r&&a.length>0?app.showInformation(null,null,null,null,a,o):r&&0==a.length&&app.showInformation(parseInt(r.getProperties().markerId),r.getProperties().markerUser,r.getProperties().markerDate,r.getProperties().layerName,null,null)});</script>";
-        //webViewMap.loadDataWithBaseURL("file:///android_asset/blank.html",  html, "text/html", "utf-8", null);
+        //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            webViewMap.setWebContentsDebuggingEnabled(true);
+        //}
 
-        webViewMap.addJavascriptInterface(new JavaScriptHandler(this), "app");
+        webViewMap.addJavascriptInterface(this, "Android");
 
         searchLayerEditText = (EditText) findViewById(R.id.edit_text_search_layer);
 
@@ -164,7 +169,7 @@ public class MapActivity extends Activity
             @Override
             public void onClick(View v)
             {
-                searchLayerEditText.setText("");
+            searchLayerEditText.setText("");
             }
         });
 
@@ -187,7 +192,6 @@ public class MapActivity extends Activity
             @Override
             public void beforeTextChanged(CharSequence arg0, int arg1, int arg2, int arg3)
             {
-
             }
 
             @Override
@@ -212,9 +216,7 @@ public class MapActivity extends Activity
         buttonLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 openAlert(v);
-
             }
         });
 
@@ -273,6 +275,10 @@ public class MapActivity extends Activity
 
     }
 
+    /**
+     * Dialog para sair ou permanecer na aplicação
+     * @param view
+     */
     private void openAlert(View view) {
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MapActivity.this);
 
@@ -309,6 +315,14 @@ public class MapActivity extends Activity
         alertDialog.show();
     }
 
+    @JavascriptInterface
+    public void changeToAddMarker(String wktCoordenate){
+        Intent intent = new Intent(MapActivity.this, MarkerActivity.class);
+        intent.putExtra("wktCoordenate", wktCoordenate);
+        startActivity(intent);
+    }
+
+    @JavascriptInterface
     public void showInformation( long markerId, String markerUser, String markerDate, String layerName, String[] listUrls, String[] listTitles)
     {
         if( markerId > 0 || listUrls != null )
