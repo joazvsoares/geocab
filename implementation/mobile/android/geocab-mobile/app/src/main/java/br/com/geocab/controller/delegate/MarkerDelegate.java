@@ -20,6 +20,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
 import org.json.JSONArray;
@@ -88,7 +89,6 @@ public class MarkerDelegate extends AbstractDelegate
         this.layerName = name;
 
         this.webViewMap = webViewMap;
-
     }
 
 
@@ -103,9 +103,10 @@ public class MarkerDelegate extends AbstractDelegate
      */
     public void listMarkersByLayer( long layerId, final String layerIcon )
     {
-        String url = getUrl()+ "/"+layerId+"/markers";
+        //String url = getUrl()+ "/"+layerId+"/markers";
+        String url = "http://192.168.0.40:8080/geocab/marker" + "/"+layerId+"/markers";
 
-        JsonArrayRequest jReq = new JsonArrayRequest(url, new Response.Listener<JSONArray>() {
+            JsonArrayRequest jReq = new JsonArrayRequest(url, new Response.Listener<JSONArray>() {
 
             GsonBuilder gsonBuilder = new GsonBuilder();
 
@@ -135,7 +136,7 @@ public class MarkerDelegate extends AbstractDelegate
                         DateFormat df1 = new SimpleDateFormat("dd/MM/yyyy");
                         String dateFormatted = df1.format(marker.getCreated().getTime());
 
-                        webViewMap.loadUrl("javascript:showMarker(\"" + marker.getLatitude() + "\",\"" + marker.getLongitude() + "\", \""+marker.getId()+"\", \""+marker.getUser().getName()+"\", \""+dateFormatted+"\", \""+layerName+"\", \""+layerIcon+"\")");
+                        webViewMap.loadUrl("javascript:showMarker(\"" + marker.getWktCoordenate() + "\", \""+marker.getId()+"\", \""+marker.getUser().getName()+"\", \""+dateFormatted+"\", \""+layerName+"\", \""+layerIcon+"\")");
 
 
                     }
@@ -218,7 +219,6 @@ public class MarkerDelegate extends AbstractDelegate
             public void onErrorResponse(VolleyError error) {
                 // Handle error
                 Toast.makeText(MarkerDelegate.this.context, R.string.error_connection, Toast.LENGTH_SHORT).show();
-
             }
         })
         {
@@ -227,7 +227,6 @@ public class MarkerDelegate extends AbstractDelegate
             protected Map<String, String> getParams()
             {
                 Map<String, String>  params = new HashMap<String, String>();
-
                 return params;
             }
 
@@ -369,6 +368,63 @@ public class MarkerDelegate extends AbstractDelegate
 
         // Adding request to request queue
         AppController.getInstance().addToRequestQueue(jsonObjReq);
+    }
+
+    public void insert( Marker marker )
+    {
+        final Gson json = new GsonBuilder().create();
+        JSONObject markerJSON = null;
+        //String url = getUrl()+ "/";
+        String url = "http://192.168.0.40:8080/geocab/marker/";
+
+        try {
+            markerJSON = new JSONObject(json.toJson(marker));
+        } catch (Exception e) {
+
+        }
+
+        JsonObjectRequest jReq = new JsonObjectRequest(Request.Method.POST, url, markerJSON, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response)
+            {
+                for (int i = 0; i < response.length(); i++)
+                {
+                    try
+                    {
+                        JSONObject jsonObject = response;
+                    }
+                    catch (Exception e)
+                    {
+                        Toast.makeText(MarkerDelegate.this.context, R.string.error_connection, Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                // Handle error
+                Log.e("ERROR", "ERROR");
+            }
+        })
+        {
+            @Override
+            protected Map<String, String> getParams()
+            {
+                Map<String, String>  params = new HashMap<String, String>();
+                return params;
+            }
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String,String> params = new HashMap<String, String>();
+                final String credentials = loggedUser.getEmail() + ":" + loggedUser.getPassword();
+                params.put("Authorization", "Basic " + Base64.encodeToString(credentials.getBytes(), Base64.NO_WRAP) );
+                params.put("Content-Type", "application/json; charset=utf-8");
+                return params;
+            }
+        };
+
+        AppController.getInstance().addToRequestQueue(jReq);
+
     }
 
 }
