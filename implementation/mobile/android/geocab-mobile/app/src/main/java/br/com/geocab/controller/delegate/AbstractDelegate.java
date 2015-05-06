@@ -44,7 +44,7 @@ public abstract class AbstractDelegate
 
     protected String getUrl()
     {
-        //return "http://192.168.20.122:8080/geocab/" + urlPath;
+        //return "http://192.168.0.104:8080/geocab/" + urlPath;
         return "http://geocab.sbox.me/" + urlPath;
     }
 
