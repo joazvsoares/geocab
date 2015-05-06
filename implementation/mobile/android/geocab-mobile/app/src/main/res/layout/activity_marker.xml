@@ -1,0 +1,151 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    tools:context="br.com.geocab.controller.activity.MarkerActivity">
+
+    <ScrollView android:id="@+id/ScrollView01" android:layout_height="wrap_content" android:layout_width="fill_parent">
+
+        <LinearLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/linearPainel"
+            android:focusable="true" android:focusableInTouchMode="true"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="14px"
+            android:paddingLeft="15px"
+            android:paddingRight="20px">
+
+        <!-- *********** FORMITEM CAMADA *************** -->
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="5px"
+            android:text="Camada"
+            android:textAppearance="?android:attr/textAppearanceMedium">
+        </TextView>
+
+        <Spinner
+            android:id="@+id/spinner_layers"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" />
+
+        <!-- *********** FORMITEM NOME *************** -->
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="5px"
+            android:text="Nome"
+            android:textAppearance="?android:attr/textAppearanceMedium" >
+        </TextView>
+
+        <EditText
+            android:id="@+id/edtDiagnosticoClinico"
+            android:nextFocusDown="@+id/edtDataNascimento"
+            android:inputType="textCapCharacters"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" />
+
+        <!-- *********** FORMITEM DATA *************** -->
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="5px"
+            android:text="Data"
+            android:textAppearance="?android:attr/textAppearanceMedium" >
+        </TextView>
+
+        <EditText
+            android:id="@+id/edtDataNascimento"
+            android:nextFocusDown="@+id/edtProfissao"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" />
+
+        <!-- *********** FORMITEM NOVO *************** -->
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="5px"
+            android:text="Novo"
+            android:textAppearance="?android:attr/textAppearanceMedium" >
+        </TextView>
+
+        <RadioGroup
+            android:id="@+id/grupoTipoPaciente"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" >
+
+            <RadioButton
+                android:id="@+id/radioFisioterapia1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:paddingRight="7px"
+                android:text="Sim" />
+
+            <RadioButton
+                android:id="@+id/radioMusculacao"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Não" />
+        </RadioGroup>
+
+        <ImageView
+            android:id="@+id/img_marker"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" >
+        </ImageView>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <!-- Footer aligned to bottom -->
+    <RelativeLayout
+        android:id="@+id/footer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:gravity="center" >
+
+        <Button
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:text="Selecionar"
+            android:id="@+id/btn_select_photo"
+            android:padding="4dp"
+            android:textColor="#FFFFFF"
+            android:drawableLeft="@drawable/ic_action_photo"
+            android:background="@android:color/black"
+            android:layout_centerVertical="true"
+            android:layout_alignParentStart="true"
+            android:onClick="selectMarkerImage" />
+
+        <Button
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:text="Salvar"
+            android:layout_marginLeft="15dp"
+            android:padding="4dp"
+            android:background="@android:color/holo_green_dark"
+            android:id="@+id/button2"
+            android:layout_alignParentTop="true"
+            android:layout_toEndOf="@+id/btn_select_photo"
+            android:onClick="insertMarker" />
+
+    </RelativeLayout>
+
+</RelativeLayout>
