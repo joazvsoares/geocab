@@ -60,7 +60,7 @@ public class Layer
     /**
      * Field that informs if the {@link Layer} is checked
      */
-    private Boolean isChecked = false;
+    private transient Boolean isChecked = false;
 
     /**
      * Icon of {@link Layer}
@@ -202,4 +202,10 @@ public class Layer
     public void setIcon(String icon) {
         this.icon = icon;
     }
+
+    @Override
+    public String toString() {
+        return this.name;
+    }
+
 }

@@ -8,7 +8,6 @@ import android.graphics.Bitmap;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.List;
 
 /**
@@ -29,19 +28,19 @@ public class Marker implements Serializable
      */
     private Long id;
 
-	private String latitude;
-
-	private String longitude;
+	private String wktCoordenate;
 
     private Bitmap image;
 	
-	private StatusMarker status;
+	private MarkerStatus status;
 
     private User user;
 
     private Layer layer;
 
     private List<MarkerAttribute> markerAttributes = new ArrayList<MarkerAttribute>();
+
+    private List<MarkerModeration> markerModeration = new ArrayList<MarkerModeration>();
 
     private Calendar created;
 
@@ -53,20 +52,17 @@ public class Marker implements Serializable
 	/**
 	 * 
 	 */
+    public Marker()
+    {
+    }
+
+
 	public Marker(Long id, String markerCreatedFormated, User user)
 	{
         this.id = id;
         this.markerCreatedFormated = markerCreatedFormated;
 		this.user = user;
 	}
-
-    public Marker(Long id, String latitude, String longitude, StatusMarker status, List<MarkerAttribute> markerAttributes) {
-        this.id = id;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.status = status;
-        this.markerAttributes = markerAttributes;
-    }
 
     public Long getId() {
         return id;
@@ -76,20 +72,12 @@ public class Marker implements Serializable
         this.id = id;
     }
 
-    public String getLatitude() {
-        return latitude;
+    public String getWktCoordenate() {
+        return wktCoordenate;
     }
 
-    public void setLatitude(String latitude) {
-        this.latitude = latitude;
-    }
-
-    public String getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(String longitude) {
-        this.longitude = longitude;
+    public void setWktCoordenate(String wktCoordenate) {
+        this.wktCoordenate = wktCoordenate;
     }
 
     public Bitmap getImage() {
@@ -100,11 +88,11 @@ public class Marker implements Serializable
         this.image = image;
     }
 
-    public StatusMarker getStatus() {
+    public MarkerStatus getStatus() {
         return status;
     }
 
-    public void setStatus(StatusMarker status) {
+    public void setStatus(MarkerStatus status) {
         this.status = status;
     }
 
