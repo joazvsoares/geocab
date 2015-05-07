@@ -33,6 +33,7 @@ import br.com.geocab.domain.entity.markermoderation.MarkerModeration;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 /**
@@ -78,6 +79,7 @@ public class Marker extends AbstractEntity implements Serializable
 
 	@Column(nullable = true)
 	@Type(type="org.hibernate.spatial.GeometryType")
+	@JsonIgnore
 	private Point location;
 	
 	@NotNull
@@ -95,7 +97,7 @@ public class Marker extends AbstractEntity implements Serializable
 	@OneToMany(mappedBy="marker", fetch=FetchType.EAGER, cascade={CascadeType.ALL})
 	private List<MarkerAttribute> markerAttributes = new ArrayList<MarkerAttribute>();
 	
-	@JsonManagedReference
+	@JsonIgnore
 	@OneToMany(mappedBy="marker", fetch=FetchType.EAGER, cascade={CascadeType.ALL})
 	private List<MarkerModeration> markerModeration = new ArrayList<MarkerModeration>();
 
