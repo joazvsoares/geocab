@@ -4,10 +4,12 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import br.com.geocab.domain.entity.layer.Attribute;
 import br.com.geocab.domain.entity.layer.Layer;
 import br.com.geocab.domain.service.LayerGroupService;
 
@@ -62,6 +64,28 @@ public class LayerGroupRESTful
 		
 		return layers;
 	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	@RequestMapping(value="internal/layers", method = RequestMethod.GET)
+	public @ResponseBody List<Layer> listAllInternalLayerGroups()
+	{
+		return this.layerGroupService.listAllInternalLayerGroups();
+	}	
+	
+	/**
+	 * 
+	 * @param layerId
+	 * @return
+	 */
+	@RequestMapping(value="/{layerId}/layerattributes", method = RequestMethod.GET)
+	public @ResponseBody List<Attribute> listAttributeByMarker(@PathVariable long layerId)
+	{
+		return this.layerGroupService.listAttributesByLayer(layerId);
+	}	
+
 	
 	
 }
