@@ -57,60 +57,66 @@ public class MetaFileRESTFul
 	@RequestMapping(method = RequestMethod.GET, value = "markers/{markerId}/download")
 	public @ResponseBody MetaFile downloadProfilePicture( @PathVariable Long markerId, @RequestParam(required=false) boolean download, 
 			 @RequestParam(required=false) boolean display,
-			 HttpServletResponse response ) throws IOException, InvocationTargetException, RepositoryException
+			 HttpServletResponse response )
 	{
-		
-		final String path = String.format( Marker.PICTURE_PATH, markerId, markerId);
-		
-		//First of all, we create the MetaFile to look for the media in the respository.
-		MetaFile metaFile = new MetaFile();
-		
-		metaFile = this.metaFileRepository.findByPath( path, true );
-		
-		response.setHeader("Cache-Control", "max-age=864000");
-		
-		//Configure the response header
-		if ( display )
+		try 
 		{
-			//If we will display the media content
-			response.setHeader("Content-Disposition", "inline; filename="+URLEncoder.encode(metaFile.getName(),"UTF-8"));
-		}
-		else if ( download )
+			final String path = String.format( Marker.PICTURE_PATH, markerId, markerId);
+			
+			//First of all, we create the MetaFile to look for the media in the respository.
+			MetaFile metaFile = new MetaFile();
+			
+			metaFile = this.metaFileRepository.findByPath( path, true );
+			
+			response.setHeader("Cache-Control", "max-age=864000");
+			
+			//Configure the response header
+			if ( display )
+			{
+				//If we will display the media content
+				response.setHeader("Content-Disposition", "inline; filename="+URLEncoder.encode(metaFile.getName(),"UTF-8"));
+			}
+			else if ( download )
+			{
+				//The name of file encoded to prevent files with blank fields or strange chars.
+				response.setHeader("Content-Disposition", "attachment; filename="+URLEncoder.encode(metaFile.getName(),"UTF-8") );			
+			}
+			
+			//Set the content type.
+			if ( metaFile.getContentType() != null && !metaFile.getContentType().isEmpty() )
+			{
+				response.setContentType( metaFile.getContentType() );
+			}
+			else
+			{
+				response.setContentType("product/x-download"); //product/octet-stream
+			}
+			
+			//Try to set the content length
+			if ( metaFile.getContentLength() > 0 )
+			{
+				response.setContentLength( (int) metaFile.getContentLength() );
+			}
+			
+			//Write the media stream in the response stream
+			//While is possible to read() the stream...
+			int i;
+			while ( (i = metaFile.getInputStream().read()) != -1 )
+			{
+				response.getOutputStream().write(i);
+			}
+	
+			//Now we close all streams.
+			metaFile.getInputStream().close();
+			response.getOutputStream().flush();
+			response.getOutputStream().close();
+			
+			return metaFile;
+		} 
+		catch ( RepositoryException | IOException e )
 		{
-			//The name of file encoded to prevent files with blank fields or strange chars.
-			response.setHeader("Content-Disposition", "attachment; filename="+URLEncoder.encode(metaFile.getName(),"UTF-8") );			
+			return null;
 		}
-		
-		//Set the content type.
-		if ( metaFile.getContentType() != null && !metaFile.getContentType().isEmpty() )
-		{
-			response.setContentType( metaFile.getContentType() );
-		}
-		else
-		{
-			response.setContentType("product/x-download"); //product/octet-stream
-		}
-		
-		//Try to set the content length
-		if ( metaFile.getContentLength() > 0 )
-		{
-			response.setContentLength( (int) metaFile.getContentLength() );
-		}
-		
-		//Write the media stream in the response stream
-		//While is possible to read() the stream...
-		int i;
-		while ( (i = metaFile.getInputStream().read()) != -1 )
-		{
-			response.getOutputStream().write(i);
-		}
-
-		//Now we close all streams.
-		metaFile.getInputStream().close();
-		response.getOutputStream().flush();
-		response.getOutputStream().close();
-		
-		return metaFile;
 	}
 	
 	/**
