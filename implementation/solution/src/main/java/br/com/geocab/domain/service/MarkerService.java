@@ -115,10 +115,6 @@ public class MarkerService
 	public Marker insertMarker(Marker marker) throws IOException,
 			RepositoryException
 	{
-
-		List<MarkerModeration> list = this.markerModerationRepository
-				.listByFilters(null, null).getContent();
-		System.out.println(list);
 		try
 		{
 			User user = ContextHolder.getAuthenticatedUser();
