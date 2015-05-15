@@ -10,7 +10,7 @@
 
         <LinearLayout
             xmlns:android="http://schemas.android.com/apk/res/android"
-            android:id="@+id/linearPainel"
+            android:id="@+id/mainPainel"
             android:focusable="true" android:focusableInTouchMode="true"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
@@ -35,72 +35,18 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content" />
 
-        <!-- *********** FORMITEM NOME *************** -->
+        <!-- *********** FORMITEMS *************** -->
 
-        <TextView
-            android:id="@+id/textView1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingTop="5px"
-            android:text="Nome"
-            android:textAppearance="?android:attr/textAppearanceMedium" >
-        </TextView>
-
-        <EditText
-            android:id="@+id/edtDiagnosticoClinico"
-            android:nextFocusDown="@+id/edtDataNascimento"
-            android:inputType="textCapCharacters"
+        <LinearLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/linearPainel"
+            android:focusable="true" android:focusableInTouchMode="true"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content" />
-
-        <!-- *********** FORMITEM DATA *************** -->
-
-        <TextView
-            android:id="@+id/textView1"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingTop="5px"
-            android:text="Data"
-            android:textAppearance="?android:attr/textAppearanceMedium" >
-        </TextView>
+            android:orientation="vertical">
+        </LinearLayout>
 
-        <EditText
-            android:id="@+id/edtDataNascimento"
-            android:nextFocusDown="@+id/edtProfissao"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content" />
-
-        <!-- *********** FORMITEM NOVO *************** -->
-
-        <TextView
-            android:id="@+id/textView1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingTop="5px"
-            android:text="Novo"
-            android:textAppearance="?android:attr/textAppearanceMedium" >
-        </TextView>
-
-        <RadioGroup
-            android:id="@+id/grupoTipoPaciente"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal" >
-
-            <RadioButton
-                android:id="@+id/radioFisioterapia1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                android:paddingRight="7px"
-                android:text="Sim" />
-
-            <RadioButton
-                android:id="@+id/radioMusculacao"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Não" />
-        </RadioGroup>
+        <!-- *********** IMAGE PREVIEW *************** -->
 
         <ImageView
             android:id="@+id/img_marker"
@@ -144,7 +90,7 @@
             android:id="@+id/button2"
             android:layout_alignParentTop="true"
             android:layout_toEndOf="@+id/btn_select_photo"
-            android:onClick="insertMarker" />
+            android:onClick="saveMarker" />
 
     </RelativeLayout>
 
