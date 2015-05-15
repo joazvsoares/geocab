@@ -7,6 +7,7 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.graphics.drawable.AnimationDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -15,6 +16,7 @@ import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.widget.DrawerLayout;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Base64;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -33,20 +35,26 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.Session;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Map;
 
 import br.com.geocab.R;
-import br.com.geocab.controller.activity.dialog.DialogInformation;
 import br.com.geocab.controller.adapter.NavDrawerListAdapter;
+import br.com.geocab.controller.app.AppController;
+import br.com.geocab.controller.delegate.AbstractDelegate;
 import br.com.geocab.controller.delegate.LayerDelegate;
 import br.com.geocab.controller.delegate.MarkerDelegate;
 import br.com.geocab.entity.GroupEntity;
 import br.com.geocab.entity.Layer;
 import br.com.geocab.entity.Marker;
+import br.com.geocab.entity.MarkerStatus;
 import br.com.geocab.entity.User;
+import br.com.geocab.util.DelegateHandler;
 import br.com.geocab.util.JavaScriptHandler;
 
 public class MapActivity extends Activity
@@ -113,14 +121,12 @@ public class MapActivity extends Activity
     /**
      *
      */
-    private DialogInformation dialogInformation;
-
-    private ProgressDialog progressDialog;
+    boolean doubleBackToExitPressedOnce;
 
     /**
      *
      */
-    boolean doubleBackToExitPressedOnce;
+    private MarkerDelegate markerDelegate;
 
     /*-------------------------------------------------------------------
 	 *				 		     HANDLERS
@@ -137,6 +143,8 @@ public class MapActivity extends Activity
     {
         super.onCreate(savedInstanceState);
 
+        this.markerDelegate = new MarkerDelegate(this);
+
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
         WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -152,13 +160,16 @@ public class MapActivity extends Activity
         webViewMap.getSettings().setRenderPriority(RenderPriority.HIGH);
         webViewMap.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
         webViewMap.setWebChromeClient(new WebChromeClient());
-        webViewMap.loadUrl("file:///android_asset/map.html");
+        webViewMap.loadUrl("file:///android_asset/webview.html");
 
         //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             webViewMap.setWebContentsDebuggingEnabled(true);
         //}
 
         webViewMap.addJavascriptInterface(this, "Android");
+
+        // Guarda a referência do webview na main controller
+        AppController.getInstance().setWebViewMap(webViewMap);
 
         searchLayerEditText = (EditText) findViewById(R.id.edit_text_search_layer);
 
@@ -169,7 +180,7 @@ public class MapActivity extends Activity
             @Override
             public void onClick(View v)
             {
-            searchLayerEditText.setText("");
+                searchLayerEditText.setText("");
             }
         });
 
@@ -220,17 +231,11 @@ public class MapActivity extends Activity
             }
         });
 
-        progressDialog = new ProgressDialog(this);
-        dialogInformation = new DialogInformation(this);
-
         //NAV DRAWER
 
         mDrawerLayout=(DrawerLayout) findViewById(R.id.drawer_layout);
-
         mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-
         mDrawerList=(ListView) findViewById(R.id.list_slidermenu);
-
         mDrawerList.setTextFilterEnabled(true);
 
         // setting the nav drawer list adapter
@@ -242,9 +247,13 @@ public class MapActivity extends Activity
         adapter=new NavDrawerListAdapter(getApplicationContext(), 0,objects);
         mDrawerList.setAdapter(adapter);
 
-        this.layerDelegate=new LayerDelegate(MapActivity.this, adapter);
-
-        this.layerDelegate.listLayersPublished();
+        this.layerDelegate = new LayerDelegate(this);
+        this.layerDelegate.listLayersPublished(new DelegateHandler<ArrayList>() {
+            public void responseHandler(ArrayList result) {
+                adapter.setItemList(result);
+                adapter.notifyDataSetChanged();
+            }
+        });
 
         mDrawerToggle=new ActionBarDrawerToggle(this,mDrawerLayout,
                         R.drawable.ic_drawer, //nav menu toggle icon
@@ -255,18 +264,14 @@ public class MapActivity extends Activity
         public void onDrawerClosed (View view)
         {
             hideSoftKeyboard(MapActivity.this);
-
             invalidateOptionsMenu();
-
             mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
         }
 
         public void onDrawerOpened(View drawerView)
         {
             hideSoftKeyboard(MapActivity.this);
-
             invalidateOptionsMenu();
-
             mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
         }
 
@@ -288,19 +293,19 @@ public class MapActivity extends Activity
         alertDialogBuilder.setPositiveButton("Sim",new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog,int id) {
 
-                if (Session.getActiveSession() != null)
-                {
-                    Session.getActiveSession().closeAndClearTokenInformation();
-                    Session.setActiveSession(null);
-                }
+            if (Session.getActiveSession() != null)
+            {
+                Session.getActiveSession().closeAndClearTokenInformation();
+                Session.setActiveSession(null);
+            }
 
-                SplashScreenActivity.prefEditor = SplashScreenActivity.settings.edit();
-                SplashScreenActivity.prefEditor.putString("email", null);
-                SplashScreenActivity.prefEditor.putString("password", null);
-                SplashScreenActivity.prefEditor.commit();
+            SplashScreenActivity.prefEditor = SplashScreenActivity.settings.edit();
+            SplashScreenActivity.prefEditor.putString("email", null);
+            SplashScreenActivity.prefEditor.putString("password", null);
+            SplashScreenActivity.prefEditor.commit();
 
-                startActivity(new Intent(MapActivity.this, AuthenticationActivity.class));
-                finish();
+            startActivity(new Intent(MapActivity.this, AuthenticationActivity.class));
+            finish();
 
             }
         });
@@ -323,44 +328,125 @@ public class MapActivity extends Activity
     }
 
     @JavascriptInterface
-    public void showInformation( long markerId, String markerUser, String markerDate, String layerName, String[] listUrls, String[] listTitles)
+    public void changeToUpdateMarker(String markerJson){
+        Intent intent = new Intent(MapActivity.this, MarkerActivity.class);
+        intent.putExtra("marker", new GsonBuilder().create().fromJson(markerJson, Marker.class));
+        startActivity(intent);
+    }
+
+    @JavascriptInterface
+    public void showMarker( long markerId )
     {
-        if( markerId > 0 || listUrls != null )
-        {
-            Marker marker = new Marker(markerId, markerDate, new User("", markerUser) );
-            marker.setLayer(new Layer(layerName, layerName));
+        final Marker marker = new Marker(markerId);
 
-            dialogInformation.showLoadMarkers(progressDialog);
+        this.markerDelegate.showLoadingDialog();
+        this.markerDelegate.listMarkerAttributesByMarker(marker, new DelegateHandler<String>() {
+            @Override
+            public void responseHandler(final String markerJson) {
 
-            MarkerDelegate markerDelegate = new MarkerDelegate(this, dialogInformation);
+                // Faz uma nova requisição para mostrar a imagem do marker
+                markerDelegate.downloadMarkerPicture(marker, new DelegateHandler<Bitmap>() {
+                    @Override
+                    public void responseHandler(Bitmap bitmap) {
 
-            if( markerId > 0 && listUrls == null )
-            {
-                markerDelegate.downloadMarkerPicture(marker);
+                        // Convert bitmap to Base64 encoded image for web
+                        String imageBase64 = "";
+                        if (bitmap != null) {
+                            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                            bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+                            byte[] byteArray = byteArrayOutputStream.toByteArray();
+                            String image = Base64.encodeToString(byteArray, Base64.DEFAULT);
+                            imageBase64 = "data:image/png;base64," + image;
+                        }
+
+                        // Mostra o painel com informações do marker
+                        String loggedUserJson = new GsonBuilder().create().toJson(AbstractDelegate.loggedUser);
+                        webViewMap.loadUrl("javascript:geocabapp.marker.show('" + markerJson + "', '" + imageBase64 + "', '" + loggedUserJson + "')");
+
+                        markerDelegate.hideLoadingDialog();
+                    }
+
+                    ;
+                });
+
             }
-            else if( markerId == 0 && listUrls != null )
-            {
-                for(int i = 0; i < listUrls.length; i++)
-                {
-                    markerDelegate.listLayerProperties(listUrls[i], listTitles[i]);
-                }
-            }
-            else if(markerId > 0 && listUrls != null )
-            {
-                markerDelegate.downloadMarkerPicture(marker);
 
-                for(int i = 0; i < listUrls.length; i++)
-                {
-                    markerDelegate.listLayerProperties(listUrls[i], listTitles[i]);
-                }
+            ;
+        });
+
+        runOnUiThread(new Runnable() {
+            public void run() {
+                buttonOpenMenu.setVisibility(View.GONE);
             }
-        }
+        });
+    }
+
+    @JavascriptInterface
+    public void showOpenMenuButton()
+    {
+        runOnUiThread(new Runnable() {
+            public void run() {
+                buttonOpenMenu.setVisibility(View.VISIBLE);
+            }
+        });
+    }
+
+    @JavascriptInterface
+    public void changeToApproveMarker(String markerJson)
+    {
+        final Gson gson = new GsonBuilder().create();
+        final Marker marker = gson.fromJson(markerJson, Marker.class);
+
+        this.markerDelegate.showLoadingDialog();
+        this.markerDelegate.approveMarker(marker.getId(), new DelegateHandler() {
+            @Override
+            public void responseHandler(Object result) {
+                marker.setStatus(MarkerStatus.ACCEPTED);
+                AppController.getInstance().getWebViewMap().loadUrl("javascript:geocabapp.marker.loadActions('" + gson.toJson(marker) + "')");
+
+                markerDelegate.hideLoadingDialog();
+            }
+        });
+    }
+
+    @JavascriptInterface
+    public void changeToRefuseMarker(String markerJson)
+    {
+        final Gson gson = new GsonBuilder().create();
+        final Marker marker = gson.fromJson(markerJson, Marker.class);
+
+        this.markerDelegate.showLoadingDialog();
+        this.markerDelegate.refuseMarker(marker.getId(), new DelegateHandler() {
+            @Override
+            public void responseHandler(Object result) {
+                marker.setStatus(MarkerStatus.REFUSED);
+                AppController.getInstance().getWebViewMap().loadUrl("javascript:geocabapp.marker.loadActions('" + gson.toJson(marker) + "')");
+
+                markerDelegate.hideLoadingDialog();
+            }
+        });
+    }
+
+    @JavascriptInterface
+    public void changeToRemoveMarker(String markerJson)
+    {
+        final Gson gson = new GsonBuilder().create();
+        final Marker marker = gson.fromJson(markerJson, Marker.class);
+
+        this.markerDelegate.showLoadingDialog();
+        this.markerDelegate.removeMarker(marker.getId(), new DelegateHandler() {
+            @Override
+            public void responseHandler(Object result) {
+                AppController.getInstance().getWebViewMap().loadUrl("javascript:geocabapp.marker.hide()");
+                AppController.getInstance().getWebViewMap().loadUrl("javascript:geocabapp.closeMarker('" + marker.getId() + "')");
+
+                markerDelegate.hideLoadingDialog();
+            }
+        });
     }
 
     /**
-     *
      * Close keyboard
-     *
      * @param activity
      */
     public static void hideSoftKeyboard(Activity activity)
@@ -368,11 +454,6 @@ public class MapActivity extends Activity
         InputMethodManager inputMethodManager = (InputMethodManager)  activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
         inputMethodManager.hideSoftInputFromWindow(activity.getCurrentFocus().getWindowToken(), 0);
     }
-
-    /**
-     * When using the ActionBarDrawerToggle, you must call it during
-     * onPostCreate() and onConfigurationChanged()...
-     */
 
     /**
      *
@@ -393,7 +474,6 @@ public class MapActivity extends Activity
         Toast.makeText( this, R.string.click_exit, Toast.LENGTH_SHORT ).show();
 
         new Handler().postDelayed(new Runnable() {
-
             @Override
             public void run() {
                 doubleBackToExitPressedOnce = false;
