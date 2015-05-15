@@ -5,6 +5,7 @@ package br.com.geocab.entity;
 
 import android.graphics.Bitmap;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -29,8 +30,6 @@ public class Marker implements Serializable
     private Long id;
 
 	private String wktCoordenate;
-
-    private Bitmap image;
 	
 	private MarkerStatus status;
 
@@ -42,9 +41,9 @@ public class Marker implements Serializable
 
     private List<MarkerModeration> markerModeration = new ArrayList<MarkerModeration>();
 
-    private Calendar created;
+    private transient Bitmap image;
 
-    private String markerCreatedFormated;
+    private transient File file;
 
 	/*-------------------------------------------------------------------
 	 * 		 					CONSTRUCTORS
@@ -57,11 +56,9 @@ public class Marker implements Serializable
     }
 
 
-	public Marker(Long id, String markerCreatedFormated, User user)
+	public Marker(Long id)
 	{
         this.id = id;
-        this.markerCreatedFormated = markerCreatedFormated;
-		this.user = user;
 	}
 
     public Long getId() {
@@ -112,6 +109,14 @@ public class Marker implements Serializable
         this.layer = layer;
     }
 
+    public File getFile() {
+        return file;
+    }
+
+    public void setFile(File file) {
+        this.file = file;
+    }
+
     public List<MarkerAttribute> getMarkerAttributes() {
         return markerAttributes;
     }
@@ -120,19 +125,4 @@ public class Marker implements Serializable
         this.markerAttributes = markerAttributes;
     }
 
-    public Calendar getCreated() {
-        return created;
-    }
-
-    public void setCreated(Calendar created) {
-        this.created = created;
-    }
-
-    public String getMarkerCreatedFormated() {
-        return markerCreatedFormated;
-    }
-
-    public void setMarkerCreatedFormated(String markerCreatedFormated) {
-        this.markerCreatedFormated = markerCreatedFormated;
-    }
 }
