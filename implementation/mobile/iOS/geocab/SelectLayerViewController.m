@@ -44,6 +44,8 @@ BOOL animating;
     self.tableView.dataSource = self;
     self.tableView.delegate = self;
     
+    LayerDelegate *layerDelegate = nil;
+    
     if (self.multipleSelection) {
         _syncButton = [UIButton buttonWithType:UIButtonTypeCustom];
         [_syncButton setFrame:CGRectMake(10.0, 2.0, 20.0, 20.0)];
@@ -70,6 +72,9 @@ BOOL animating;
         [logoutButton setTitle:@"Logout" forState:UIControlStateNormal];
         [self.view addSubview:logoutButton];
         
+        // Todas as layers
+        layerDelegate = [[LayerDelegate alloc] initWithUrl:@"layergroup/layers"];
+        
     } else {
         _syncButton = [UIButton buttonWithType:UIButtonTypeCustom];
         [_syncButton setFrame:CGRectMake(10.0, 2.0, 20.0, 20.0)];
@@ -79,11 +84,13 @@ BOOL animating;
         self.navigationItem.rightBarButtonItem = button;
         
         self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(didCancel)];
+        
+        // Apenas layers para cadastro de markers
+        layerDelegate = [[LayerDelegate alloc] initWithUrl:@"layergroup/internal/layers"];
     }
     
     [self startSpin];
     
-    LayerDelegate *layerDelegate = [[LayerDelegate alloc] initWithUrl:@"layergroup/layers"];
     [layerDelegate list:^(RKObjectRequestOperation *operation, RKMappingResult *result) {
         
         _layers = [[result array] sortedArrayUsingDescriptors:@[[NSSortDescriptor sortDescriptorWithKey:@"name" ascending:YES]]];
