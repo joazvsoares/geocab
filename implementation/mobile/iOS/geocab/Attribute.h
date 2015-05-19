@@ -14,7 +14,7 @@
 
 @property (nonatomic, retain) NSNumber *id;
 @property (nonatomic, retain) NSString *name;
-@property (nonatomic) enum AttributeType type;
+@property (nonatomic, retain) NSString *type;
 @property (nonatomic) BOOL required;
 @property (nonatomic) BOOL attributeDefault;
 @property (nonatomic, retain) Layer *layer;

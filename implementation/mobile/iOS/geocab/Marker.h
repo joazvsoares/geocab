@@ -15,8 +15,7 @@
 
 @property (nonatomic, retain) NSNumber *id;
 @property (nonatomic, retain) NSNumber *created;
-@property (nonatomic, retain) NSString *latitude;
-@property (nonatomic, retain) NSString *longitude;
+@property (nonatomic, retain) NSString *wktCoordenate;
 @property (nonatomic, retain) NSData *image;
 @property (strong, nonatomic) Layer *layer;
 @property (nonatomic) enum StatusMarker status;
