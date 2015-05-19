@@ -22,8 +22,7 @@
                                                   @"id"               : @"id",
                                                   @"created"          : @"created",
                                                   @"image"            : @"image",
-                                                  @"latitude"         : @"latitude",
-                                                  @"longitude"        : @"longitude",
+                                                  @"wktCoordenate"    : @"wktCoordenate",
                                                   @"legend"           : @"legend",
                                                   @"status"           : @"status"
                                                   }];
@@ -32,6 +31,7 @@
     AccountDelegate *accountDelegate = [[AccountDelegate alloc] init];
     
     [mapping addPropertyMapping:[RKRelationshipMapping relationshipMappingFromKeyPath:@"layer" toKeyPath:@"layer" withMapping:[layerDelegate mapping]]];
+    
     [mapping addPropertyMapping:[RKRelationshipMapping relationshipMappingFromKeyPath:@"user" toKeyPath:@"user" withMapping:[accountDelegate mapping]]]; 
     
     return mapping;
@@ -60,10 +60,6 @@
                                                   @"id"     : @"id",
                                                   @"value"  : @"value"
                                                   }];
-    
-    LayerDelegate *layerDelegate = [[LayerDelegate alloc] init];
-    [mapping addPropertyMapping:[RKRelationshipMapping relationshipMappingFromKeyPath:@"layer" toKeyPath:@"layer" withMapping:[layerDelegate mapping]]];
-    [mapping addPropertyMapping:[RKRelationshipMapping relationshipMappingFromKeyPath:@"marker" toKeyPath:@"marker" withMapping:self.mapping]];
     
     RKObjectMapping *attributeMapping = [RKObjectMapping mappingForClass:[Attribute class]];
     [attributeMapping addAttributeMappingsFromDictionary:@{
