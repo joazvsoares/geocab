@@ -11,12 +11,6 @@
 #import <CoreLocation/CoreLocation.h>
 #import "SelectLayerViewController.h"
 
-@interface AddNewMarkerViewController: UIViewController <UITableViewDelegate, UITableViewDataSource, FDTakeDelegate, UIGestureRecognizerDelegate, LayerSelectDelegate, UIScrollViewDelegate, UITextFieldDelegate, UITextViewDelegate>
-
-@property (weak, nonatomic) IBOutlet UITextField *pointName;
-@property (weak, nonatomic) IBOutlet UITextView *pointDescription;
-
-@property (nonatomic) CLLocationDegrees latitude;
-@property (nonatomic) CLLocationDegrees longitude;
+@interface AddNewMarkerViewController: UIViewController <FDTakeDelegate, LayerSelectDelegate, UIScrollViewDelegate, UITextFieldDelegate, UITextViewDelegate>
 
 @end

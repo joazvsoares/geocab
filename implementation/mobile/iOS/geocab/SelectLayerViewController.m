@@ -57,8 +57,6 @@ BOOL animating;
         [closeButton addTarget:self action:@selector(didFinish) forControlEvents:UIControlEventTouchUpInside];
         [closeButton setImage:[UIImage imageNamed:@"menu-close-btn.png"] forState:UIControlStateNormal];
         UIBarButtonItem *buttonItem = [[UIBarButtonItem alloc]initWithCustomView:closeButton];
-        
-//        UIBarButtonItem *buttonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:self action:@selector(didFinish)];
         self.navigationItem.rightBarButtonItem = buttonItem;
         
         UIButton *logoutButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];

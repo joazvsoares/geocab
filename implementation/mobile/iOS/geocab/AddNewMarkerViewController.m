@@ -8,18 +8,26 @@
 
 #import "AddNewMarkerViewController.h"
 #import "Marker.h"
+#import "LayerDelegate.h"
+#import "MarkerAttribute.h"
+#import "Attribute.h"
+#import "AttributeType.h"
 
 @interface AddNewMarkerViewController()
 
-@property (strong, nonatomic) IBOutlet UITableView *layerTableView;
 @property (strong, nonatomic) FDTakeController *takeController;
-@property (weak, nonatomic) IBOutlet UIImageView *imageView;
 @property (strong, nonatomic) SelectLayerViewController *selectLayerViewController;
-@property (strong, nonatomic) UINavigationController *navigationController;
-@property (strong, nonatomic) Marker *NewMarker;
-@property (weak, nonatomic) IBOutlet UILabel *layerTitle;
-@property (weak, nonatomic) IBOutlet UIButton *imageButton;
+@property (strong, nonatomic) UINavigationController *navigationCtrl;
+@property (strong, nonatomic) Marker *marker;
+@property (nonatomic, assign) int positionY;
+
 @property (strong, nonatomic) IBOutlet UIScrollView *scrollView;
+@property (strong, nonatomic) IBOutlet UIImageView *imageView;
+@property (weak, nonatomic) IBOutlet UIButton *imageButton;
+@property (weak, nonatomic) IBOutlet UIButton *selectLayer;
+@property (weak, nonatomic) IBOutlet UIView *dynamicFieldsView;
+
+extern NSUserDefaults *defaults;
 
 @end
 
@@ -28,51 +36,30 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    _layerTableView.delegate = self;
-    _layerTableView.dataSource = self;
-    
     _scrollView.delegate = self;
     [_scrollView setScrollEnabled:YES];
-    
-    [_layerTableView.layer setBorderWidth:0.3];
-    [_layerTableView.layer setBorderColor:[UIColor lightGrayColor].CGColor];
     
     _selectLayerViewController = [[SelectLayerViewController alloc] init];
     _selectLayerViewController.delegate = self;
     
-    _pointName.delegate = self;
-    _pointDescription.delegate = self;
-    [_pointDescription.layer setBorderWidth:0.3];
-    [_pointDescription.layer setBorderColor:[UIColor lightGrayColor].CGColor];
-    [_pointDescription.layer setCornerRadius:5];
-    
-    [_imageButton.layer setBorderWidth:0.3];
-    [_imageButton.layer setBorderColor:[UIColor lightGrayColor].CGColor];
-    [_imageButton.layer setCornerRadius:5];
-        
-    _NewMarker = [[Marker alloc] init];
-//    _NewMarker.latitude = &(_latitude);
+    self.marker = [[Marker alloc] init];
 //    _NewMarker.longitude = &(_longitude);
     
     _takeController = [[FDTakeController alloc] init];
     _takeController.delegate = self;
-}
+    
+    //Navigation Bar
+    self.navigationController.navigationBarHidden = NO;
+    self.navigationItem.title = NSLocalizedString(@"marker.information", @"");;
+    
+    UIButton *closeButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [closeButton setFrame:CGRectMake(10.0, 2.0, 20.0, 20.0)];
+    [closeButton addTarget:self action:@selector(didFinish) forControlEvents:UIControlEventTouchUpInside];
+    [closeButton setImage:[UIImage imageNamed:@"menu-close-btn.png"] forState:UIControlStateNormal];
+    UIBarButtonItem *buttonItem = [[UIBarButtonItem alloc]initWithCustomView:closeButton];
+    self.navigationItem.rightBarButtonItem = buttonItem;
+    self.navigationItem.hidesBackButton = YES;
 
-- (void) touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
-{
-    UITouch *touch = [[event allTouches] anyObject];
-    if ([self.pointName isFirstResponder] && [touch view] != self.pointName)
-    {
-        [self.pointName resignFirstResponder];
-    }
-    else if ([self.pointDescription isFirstResponder] && [touch view] != self.pointDescription)
-    {
-        [self.pointDescription resignFirstResponder];
-    }
-}
-
--(void)viewDidLayoutSubviews{
-    [_scrollView setContentSize:CGSizeMake(310, 650)];
 }
 
 - (IBAction)takePhotoOrChoseFromLibrary:(id)sender {
@@ -81,10 +68,9 @@
 
 - (IBAction)selectLayer:(id)sender {
     
-    self.navigationController = [[UINavigationController alloc] initWithRootViewController:_selectLayerViewController];
+    self.navigationCtrl = [[UINavigationController alloc] initWithRootViewController:_selectLayerViewController];
     
-    [self presentViewController:_navigationController animated:YES completion:^{
-    }];
+    [self presentViewController:_navigationCtrl animated:YES completion:^{}];
 }
 
 - (IBAction)saveMarker:(id)sender {
@@ -94,28 +80,19 @@
 }
 
 - (void)didEndSelecting:(Layer *)selectedLayer{
-    _NewMarker.layer = selectedLayer;
-    _layerTitle.text = _NewMarker.layer.title;
-//    _layerImage.image = [UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:_NewMarker.layer.legend]]];
+    self.marker.layer = selectedLayer;
     
-    [_navigationController dismissViewControllerAnimated:YES completion:^{
-        
-    }];
+    [self generateAttributeFieldsByLayer: selectedLayer];
+    
+    [self.selectLayer setTitle: self.marker.layer.title forState:UIControlStateNormal ];
+    
+    [_navigationCtrl dismissViewControllerAnimated:YES completion:^{}];
 }
 
 -(void)cancelledSelecting {
-    [_navigationController dismissViewControllerAnimated:YES completion:^{
-        
-    }];
-}
 
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
-{
-    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-    if (self) {
-        // Custom initialization
-    }
-    return self;
+    [_navigationCtrl dismissViewControllerAnimated:YES completion:^{}];
+    
 }
 
 - (void)didReceiveMemoryWarning
@@ -125,40 +102,216 @@
 }
 
 - (BOOL)validateForm {
-    if ([_pointName.text isEqualToString:@""]) {
-        UIAlertView *errorAlert = [[UIAlertView alloc] initWithTitle:@"Error" message:@"Preencha o campo [nome]" delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil];
-        [errorAlert show];
-        return NO;
-    }
+//    if ([_pointName.text isEqualToString:@""]) {
+//        UIAlertView *errorAlert = [[UIAlertView alloc] initWithTitle:@"Error" message:@"Preencha o campo [nome]" delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil];
+//        [errorAlert show];
+//        return NO;
+//    }
     return YES;
 }
 
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return 1;
+/**
+ * Gera os atributos na aplicação de acordo com a camada
+ * @param layer
+ */
+- (void)generateAttributeFieldsByLayer:(Layer *)layer {
+    
+    LayerDelegate *layerDelegate = [[LayerDelegate alloc] initWithUrl:@"layergroup"];
+    
+    [layerDelegate listAttributesById:^(RKObjectRequestOperation *operation, RKMappingResult *result) {
+        
+        NSArray *layerAttributes = [result array];
+    	[[self.dynamicFieldsView subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
+        self.dynamicFieldsView.translatesAutoresizingMaskIntoConstraints = NO;
+        
+        self.positionY = 0;
+        int labelHight = 30;
+        int fieldHeight = 50;
+        
+        // Percorre a lista de atributos da camada
+        for (Attribute *attribute in layerAttributes) {
+            
+            NSString *markerValue = @"";
+            
+            // Percore a lista de atributos do marker para bindar o valor em caso de edição
+            for ( MarkerAttribute *markerAttribute in self.marker.markerAtrributes ){
+                if ( markerAttribute.attribute.name == attribute.name ){
+                    markerValue = markerAttribute.value;
+                    break;
+                }
+            }
+            
+            // Label
+            UILabel *uiLabel = [[UILabel alloc] init];
+            uiLabel.text = [attribute.name capitalizedString];
+            uiLabel.textAlignment =  NSTextAlignmentLeft;
+            uiLabel.translatesAutoresizingMaskIntoConstraints = NO;
+            [_dynamicFieldsView addSubview:uiLabel];
+            
+            // Posicionamento
+			[self loadLeftTopPositionConstraints:uiLabel positionY:self.positionY];
+            self.positionY += labelHight;
+            
+            // Verifica se e o ultimo atributo para adicionar constraint e determinar o height da superview
+            if ( attribute == [ layerAttributes lastObject ] ) {
+                NSArray *constraint = [NSLayoutConstraint constraintsWithVisualFormat:@"V:[label]-40-|" options:0 metrics:nil views: @{@"label":uiLabel}];
+                [self.dynamicFieldsView addConstraints:constraint];
+            }
+            
+            if ( [attribute.type isEqual:@"TEXT"] ){
+                
+                UITextField *uiTextField = [self generateTextFieldPositioned];
+                [uiTextField setKeyboardType: UIKeyboardTypeDefault];
+                
+                // Adiciona o campo a view dinamica
+                [_dynamicFieldsView addSubview:uiTextField];
+                
+                // Posicionamento
+                [self loadTextFieldPositionConstraints:uiTextField positionY:self.positionY];
+                self.positionY += fieldHeight;
+                
+                // Em caso de edicao preenche o valor
+                uiTextField.text = markerValue;
+                //attribute.setViewComponent(editText);
+                
+            } else if ( [attribute.type isEqual:@"NUMBER"] ){
+                
+                UITextField *uiTextField = [self generateTextFieldPositioned];
+                [uiTextField setKeyboardType:UIKeyboardTypeNumberPad];
+                
+                // Adiciona o campo a view dinamica
+                [_dynamicFieldsView addSubview:uiTextField];
+                
+                // Posicionamento
+                [self loadTextFieldPositionConstraints:uiTextField positionY:self.positionY];
+                self.positionY += fieldHeight;
+                
+                // Em caso de edicao preenche o valor
+                uiTextField.text = markerValue;
+                //attribute.setViewComponent(editText);
+                
+            } else if ( [attribute.type isEqual:@"BOOLEAN"] ){
+                
+		    	UISwitch *uiSwitch = [[UISwitch alloc] init];
+                uiSwitch.translatesAutoresizingMaskIntoConstraints = NO;
+                
+                // Adiciona o campo a view dinamica
+                [_dynamicFieldsView addSubview:uiSwitch];
+                
+                // Posicionamento
+                [self loadLeftTopPositionConstraints:uiSwitch positionY:self.positionY];
+                self.positionY += fieldHeight;
+                
+                // Em caso de edicao preenche o valor
+                //self.myTextField.text = markerValue;
+                //attribute.setViewComponent(editText);
+                
+            } else if ( [attribute.type isEqual:@"DATE"] ){
+                
+                UITextField *uiTextField = [self generateTextFieldPositioned];
+                UIDatePicker *uiDatePicker = [[UIDatePicker alloc] init];
+                
+                [uiDatePicker addTarget:self action:@selector(datePicked:) forControlEvents:UIControlEventValueChanged];
+                uiTextField.inputView = uiDatePicker;
+                
+                // Adiciona o campo a view dinamica
+                [_dynamicFieldsView addSubview:uiTextField];
+                
+                // Posicionamento
+                [self loadTextFieldPositionConstraints:uiTextField positionY:self.positionY];
+                self.positionY += fieldHeight;
+                
+                // Em caso de edicao preenche o valor
+                uiTextField.text = markerValue;
+                //attribute.setViewComponent(editText);
+            }
+        }
+        
+    } userName:[defaults objectForKey:@"email"] password:[defaults objectForKey:@"password"] layerId:layer.id];
+    
+    
 }
 
-- (UITableViewCell*)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    static NSString *CellIdentifier = @"layerCell";
+-(UITextField *)generateTextFieldPositioned {
     
-    UITableViewCell *cell = [_layerTableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
+    UITextField *uiTextField = [[UITextField alloc] init];
+    uiTextField.translatesAutoresizingMaskIntoConstraints = NO;
+    uiTextField.borderStyle = UITextBorderStyleRoundedRect;
+    uiTextField.contentVerticalAlignment = UIControlContentVerticalAlignmentCenter;
+    uiTextField.textAlignment = NSTextAlignmentLeft;
+    uiTextField.keyboardType = UIKeyboardTypeDecimalPad;
+    uiTextField.clearButtonMode = UITextFieldViewModeAlways;
+    uiTextField.returnKeyType = UIReturnKeyDone;
+    uiTextField.delegate = self;
     
-    if (cell == nil) {
-        cell = [[UITableViewCell alloc] init];
-    }
+    return uiTextField;
     
-    UIButton *selectLayerButton = (UIButton*)[cell viewWithTag:1001];
-    [selectLayerButton addTarget:self action:@selector(selectLayer:) forControlEvents:UIControlEventTouchUpInside];
-
-    
-    return cell;
 }
 
--(void)tableView:(UITableView *)_tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    [self selectLayer:self];
+-(void)loadTextFieldPositionConstraints:(UITextField *)textField positionY:(int)positionY {
+    
+    [self loadLeftTopPositionConstraints:textField positionY:positionY];
+    
+    NSDictionary *viewsDictionary = @{@"uiView":textField};
+    NSArray *constraint_c = [NSLayoutConstraint constraintsWithVisualFormat:@"V:[uiView(40)]" options:0 metrics:nil views:viewsDictionary];
+
+    [self.dynamicFieldsView addConstraints:constraint_c];
+    [self.dynamicFieldsView addConstraint:[NSLayoutConstraint constraintWithItem:textField attribute:NSLayoutAttributeWidth relatedBy:NSLayoutRelationEqual toItem:self.dynamicFieldsView attribute:NSLayoutAttributeWidth multiplier:1 constant:0.0]];
+    
+}
+
+-(void)loadLeftTopPositionConstraints:(UIView *)uiView positionY:(int)positionY {
+    
+    NSDictionary *viewsDictionary = @{@"uiView":uiView};
+    NSString * vfl_v = [NSString stringWithFormat: @"V:|-%d-[uiView]", positionY];
+    NSArray *constraint_a = [NSLayoutConstraint constraintsWithVisualFormat:vfl_v options:0 metrics:nil views:viewsDictionary];
+    
+    NSArray *constraint_b = [NSLayoutConstraint constraintsWithVisualFormat:@"H:|-0-[uiView]" options:0 metrics:nil views:viewsDictionary];
+    
+    [self.dynamicFieldsView addConstraints:constraint_a];
+    [self.dynamicFieldsView addConstraints:constraint_b];
+    
 }
 
 - (void)takeController:(FDTakeController *)controller gotPhoto:(UIImage *)photo withInfo:(NSDictionary *)info {
+    
+    if ( self.imageView != nil )
+	    [self.imageView removeFromSuperview];
+    
+    self.imageView = [[UIImageView alloc] init];
+    self.imageView.translatesAutoresizingMaskIntoConstraints = NO;
     [self.imageView setImage:photo];
+    [self.dynamicFieldsView addSubview:self.imageView];
+    
+    // Calcula a proporcao da imagem
+    CGFloat width = CGRectGetWidth(self.dynamicFieldsView.bounds);
+    float percent = (100 * width) / photo.size.width;
+    float height = (photo.size.height * percent) / 100;
+    
+    // Define o posicionamento
+    [self loadLeftTopPositionConstraints:self.imageView positionY:self.positionY];
+    
+    NSDictionary *viewsDictionary = @{@"uiView":self.imageView};
+    
+    NSString * widthVFL = [NSString stringWithFormat: @"V:[uiView(%f)]", width];
+    NSArray *constraint_b = [NSLayoutConstraint constraintsWithVisualFormat:widthVFL options:0 metrics:nil views:viewsDictionary];
+    [self.dynamicFieldsView addConstraints:constraint_b];
+    
+    NSString * heightVFL = [NSString stringWithFormat: @"V:[uiView(%f)]", height];
+    NSArray *constraint_c = [NSLayoutConstraint constraintsWithVisualFormat:heightVFL options:0 metrics:nil views:viewsDictionary];
+    [self.dynamicFieldsView addConstraints:constraint_c];
+    
+    [self.dynamicFieldsView addConstraint:[NSLayoutConstraint constraintWithItem:self.imageView attribute:NSLayoutAttributeWidth relatedBy:NSLayoutRelationEqual toItem:self.dynamicFieldsView attribute:NSLayoutAttributeWidth multiplier:1 constant:0.0]];
+    
 }
+
+- (void)datePicked:(UIDatePicker *)sender {
+    NSLog(@"New Date: %@", sender.date);
+}
+
+-(void)didFinish {
+	[[self navigationController] popViewControllerAnimated: YES];
+}
+
 
 @end
