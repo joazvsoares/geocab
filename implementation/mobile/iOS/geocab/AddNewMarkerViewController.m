@@ -36,9 +36,6 @@ extern NSUserDefaults *defaults;
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    _scrollView.delegate = self;
-    [_scrollView setScrollEnabled:YES];
-    
     _selectLayerViewController = [[SelectLayerViewController alloc] init];
     _selectLayerViewController.delegate = self;
     
@@ -154,13 +151,12 @@ extern NSUserDefaults *defaults;
             
             // Verifica se e o ultimo atributo para adicionar constraint e determinar o height da superview
             if ( attribute == [ layerAttributes lastObject ] ) {
-                NSArray *constraint = [NSLayoutConstraint constraintsWithVisualFormat:@"V:[label]-40-|" options:0 metrics:nil views: @{@"label":uiLabel}];
-                [self.dynamicFieldsView addConstraints:constraint];
+				[self.dynamicFieldsView addConstraint:[NSLayoutConstraint constraintWithItem:self.dynamicFieldsView attribute:NSLayoutAttributeBottom relatedBy:NSLayoutRelationGreaterThanOrEqual toItem:uiLabel attribute:NSLayoutAttributeBottom multiplier:1 constant:50.0]];
             }
-            
+        
             if ( [attribute.type isEqual:@"TEXT"] ){
                 
-                UITextField *uiTextField = [self generateTextFieldPositioned];
+                UITextField *uiTextField = [self generateTextField];
                 [uiTextField setKeyboardType: UIKeyboardTypeDefault];
                 
                 // Adiciona o campo a view dinamica
@@ -176,7 +172,7 @@ extern NSUserDefaults *defaults;
                 
             } else if ( [attribute.type isEqual:@"NUMBER"] ){
                 
-                UITextField *uiTextField = [self generateTextFieldPositioned];
+                UITextField *uiTextField = [self generateTextField];
                 [uiTextField setKeyboardType:UIKeyboardTypeNumberPad];
                 
                 // Adiciona o campo a view dinamica
@@ -208,7 +204,7 @@ extern NSUserDefaults *defaults;
                 
             } else if ( [attribute.type isEqual:@"DATE"] ){
                 
-                UITextField *uiTextField = [self generateTextFieldPositioned];
+                UITextField *uiTextField = [self generateTextField];
                 UIDatePicker *uiDatePicker = [[UIDatePicker alloc] init];
                 
                 [uiDatePicker addTarget:self action:@selector(datePicked:) forControlEvents:UIControlEventValueChanged];
@@ -232,7 +228,7 @@ extern NSUserDefaults *defaults;
     
 }
 
--(UITextField *)generateTextFieldPositioned {
+-(UITextField *)generateTextField {
     
     UITextField *uiTextField = [[UITextField alloc] init];
     uiTextField.translatesAutoresizingMaskIntoConstraints = NO;
@@ -289,17 +285,16 @@ extern NSUserDefaults *defaults;
     float height = (photo.size.height * percent) / 100;
     
     // Define o posicionamento
-    [self loadLeftTopPositionConstraints:self.imageView positionY:self.positionY];
+    [self loadLeftTopPositionConstraints:self.imageView positionY:self.positionY+10];
     
     NSDictionary *viewsDictionary = @{@"uiView":self.imageView};
-    
-    NSString * widthVFL = [NSString stringWithFormat: @"V:[uiView(%f)]", width];
-    NSArray *constraint_b = [NSLayoutConstraint constraintsWithVisualFormat:widthVFL options:0 metrics:nil views:viewsDictionary];
-    [self.dynamicFieldsView addConstraints:constraint_b];
     
     NSString * heightVFL = [NSString stringWithFormat: @"V:[uiView(%f)]", height];
     NSArray *constraint_c = [NSLayoutConstraint constraintsWithVisualFormat:heightVFL options:0 metrics:nil views:viewsDictionary];
     [self.dynamicFieldsView addConstraints:constraint_c];
+    
+    NSArray *constraintBottom = [NSLayoutConstraint constraintsWithVisualFormat:@"V:[uiView]-10-|" options:0 metrics:nil views:viewsDictionary];
+    [self.dynamicFieldsView addConstraints:constraintBottom];
     
     [self.dynamicFieldsView addConstraint:[NSLayoutConstraint constraintWithItem:self.imageView attribute:NSLayoutAttributeWidth relatedBy:NSLayoutRelationEqual toItem:self.dynamicFieldsView attribute:NSLayoutAttributeWidth multiplier:1 constant:0.0]];
     
