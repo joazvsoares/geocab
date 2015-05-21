@@ -15,14 +15,7 @@
 - (RKObjectMapping *) mapping
 {
     RKObjectMapping *mapping = [RKObjectMapping mappingForClass:[Layer class]];
-    [mapping addAttributeMappingsFromDictionary:@{
-                                                  @"id"        : @"id",
-                                                  @"name"      : @"name",
-                                                  @"title"     : @"title",
-                                                  @"legend"    : @"legend",
-                                                  @"icon"      : @"icon",
-                                                  @"created"   : @"created"
-                                                  }];
+    [mapping addAttributeMappingsFromDictionary: [Layer generateDictionary]];
     
     RKObjectMapping *dataSourceMapping = [RKObjectMapping mappingForClass:[DataSource class]];
     [dataSourceMapping addAttributeMappingsFromDictionary:@{
