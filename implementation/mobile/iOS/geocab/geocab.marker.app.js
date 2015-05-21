@@ -1,3 +1,9 @@
+//
+//  geocab.marker.app.js
+//
+//  Created by Joaz Vieira Soares on 05/05/15.
+//  Copyright (c) 2014 Itaipu.
+//
 
 geocabapp.marker = function(){
 
@@ -63,19 +69,34 @@ geocabapp.marker = function(){
 	var loadMarkerAttributes = function(marker, image){
 		if ( typeof marker === 'string' )
 			marker = JSON.parse(marker);
-			
+        
+        // Verifica se foi cadastrado a layer
         if ( marker.layer !== undefined && marker.layer !== null)
 			$(".marker-title", element).html(marker.layer.title);
 		
 		var html = "";
-		var boolField = { Yes : 'Sim', No : 'Não' };
+        
+        html += templateAttribute.replace("{{label}}", marker.user.name)
+        	.replace("{{value}}", formatTimestamp(marker.created));
 		
 		// Atributos
 		for (j in marker.markerAttributes ) {
 			var attr = marker.markerAttributes[j];
-			html += templateAttribute
-				.replace("{{label}}", attr.attribute.name)
-				.replace("{{value}}", attr.attribute.type == 'BOOLEAN' ? boolField[attr.value] : attr.value);
+            var fieldValue = attr.value;
+            
+            if ( attr.attribute.type == 'DATE' ){
+                                       
+                fieldValue = formatTimestamp(attr.value);
+                
+            } else if ( attr.attribute.type == 'BOOLEAN' ){
+                
+                fieldValue = { Yes : 'Sim', No : 'Não' }[attr.value];
+            }
+            
+            html += templateAttribute
+                .replace("{{label}}", attr.attribute.name)
+                .replace("{{value}}", fieldValue);
+
 		}		
 
 		// Imagem
@@ -125,6 +146,13 @@ geocabapp.marker = function(){
 		var parentHeight = element.parent().height();
 		element.css("top", parentHeight);
 	};
+    
+    
+    var formatTimestamp = function(timestamp){
+        timestamp = timestamp.toString().length == 13 ? timestamp : timestamp * 1000;
+        var d = new Date(timestamp);
+        return d.getDate() + '/' + (d.getMonth()+1) + '/' + d.getFullYear();
+    };
 	
 	return {
 		
@@ -158,8 +186,12 @@ geocabapp.marker = function(){
 		},
 		
 		loadAttributes : function(marker, image){
+            if ( typeof marker === 'string' )
+                marker = JSON.parse(marker);
+            
+			marker.user = geocabapp.findMarker(marker.id).user;
 			loadMarkerAttributes(marker, image);
-		},		
+		},
 		
 		hide : function(){
 			hideElement();

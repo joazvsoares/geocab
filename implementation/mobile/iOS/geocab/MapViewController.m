@@ -23,18 +23,16 @@
 
 @interface MapViewController ()
 
-@property (strong, nonatomic) CLLocationManager *locationManager;
-
-@property (nonatomic) CGPoint location;
 @property (nonatomic, strong) NSTimer *timer;
 @property (retain, nonatomic) NSArray *layers;
-
-@property (retain, nonatomic) UIActionSheet *actionSheet;
+@property (nonatomic, retain) NSString *wktCoordenate;
 
 @property (strong, nonatomic) SelectLayerViewController *layerSelector;
 @property (strong, nonatomic) UINavigationController *layerSelectorNavigator;
 @property (strong, nonatomic) NSMutableArray *items;
 @property (strong, nonatomic) NSArray *selectedLayers;
+@property (strong, nonatomic) Marker *currentMarker;
+@property (strong, nonatomic) NSMutableArray *currentMarkerAttributes;
 
 @property (weak, nonatomic) IBOutlet UIButton *menuButton;
 
@@ -63,11 +61,6 @@ extern NSUserDefaults *defaults;
     
     [self loadWebView];
     
-    //Configures the location manager to fetch the users location.
-    if (nil == _locationManager)
-        _locationManager = [[CLLocationManager alloc] init];
-    
-    
     [[UIApplication sharedApplication] setStatusBarHidden:YES];
     
     _selectedLayers = [NSMutableArray array];
@@ -80,6 +73,8 @@ extern NSUserDefaults *defaults;
     [_menuButton.layer setShadowOffset:CGSizeMake(2, 2)];
     [_menuButton.layer setShadowColor:[[UIColor blackColor] CGColor]];
     [_menuButton.layer setShadowOpacity:0.5];
+    
+    _currentMarker = [[Marker alloc] init];
     
     [ControllerUtil verifyInternetConection];
 }
@@ -103,29 +98,82 @@ extern NSUserDefaults *defaults;
     transition.type = kCATransitionFromRight;
     [self.layerSelectorNavigator.view.window.layer addAnimation:transition forKey:nil];
     
-    [_layerSelectorNavigator dismissViewControllerAnimated:NO completion:^{
-
-    }];
+    [_layerSelectorNavigator dismissViewControllerAnimated:NO completion:^{}];
 }
 
 - (void) webViewDidFinishLoad:(UIWebView *)webView
 {
     JSContext *context = [_webView valueForKeyPath:@"documentView.webView.mainFrame.javaScriptContext"];
     
-    context[@"changeToAddMarker"] = ^(NSString *coordinates) {
+    context[@"changeToAddMarker"] = ^(NSString *coordenates) {
         
-        dispatch_sync(dispatch_get_main_queue(), ^{
-    		[self performSegueWithIdentifier:@"addNewMarkerSegue" sender:self];
-        });
-
+        self.currentMarker = nil;
+        self.wktCoordenate = coordenates;
+        [self performSegueWithIdentifier:@"addNewMarkerSegue" sender:self];
+        
+    };
+    
+    context[@"changeToUpdateMarker"] = ^(NSString *markerJson) {
+        
+        self.currentMarker = [Marker fromJSONString:markerJson];
+            
+        self.currentMarker.markerAttributes = self.currentMarkerAttributes;
+        
+        [self performSegueWithIdentifier:@"addNewMarkerSegue" sender:self];
+        
+    };
+    
+    context[@"changeToApproveMarker"] = ^(NSString *markerJson) {
+        
+        Marker *marker = [Marker fromJSONString:markerJson];
+        
+        MarkerDelegate *markerDelegate = [[MarkerDelegate alloc] initWithUrl:@"marker"];
+        [markerDelegate approve:[defaults objectForKey:@"email"] password:[defaults objectForKey:@"password"] markerId:marker.id];
+        
+        marker.status = @"ACCEPTED";
+        
+        NSString *functionCall = [NSString stringWithFormat:@"geocabapp.marker.loadActions('%@')", [marker toJSONString]];
+        [_webView stringByEvaluatingJavaScriptFromString:functionCall];
+        
+    };
+    
+    context[@"changeToRefuseMarker"] = ^(NSString *markerJson) {
+        
+        Marker *marker = [Marker fromJSONString:markerJson];
+        
+        MarkerDelegate *markerDelegate = [[MarkerDelegate alloc] initWithUrl:@"marker"];
+        [markerDelegate refuse:[defaults objectForKey:@"email"] password:[defaults objectForKey:@"password"] markerId:marker.id];
+        
+        marker.status = @"REFUSED";
+        
+        NSString *functionCall = [NSString stringWithFormat:@"geocabapp.marker.loadActions('%@')", [marker toJSONString]];
+        [_webView stringByEvaluatingJavaScriptFromString:functionCall];
+        
+    };
+    
+    context[@"changeToRemoveMarker"] = ^(NSString *markerJson) {
+        
+        Marker *marker = [Marker fromJSONString:markerJson];
+        MarkerDelegate *markerDelegate = [[MarkerDelegate alloc] initWithUrl:@"marker"];
+        [markerDelegate remove:[defaults objectForKey:@"email"] password:[defaults objectForKey:@"password"] markerId:marker.id];
+        
+		NSString *functionCall = [NSString stringWithFormat:@"geocabapp.closeMarker('%@')", marker.id];
+		[_webView stringByEvaluatingJavaScriptFromString:functionCall];
+        [_webView stringByEvaluatingJavaScriptFromString:@"geocabapp.marker.hide()"];
         
     };
     
     context[@"showMarker"] = ^(NSNumber *markerId) {
         
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self.menuButton.hidden = YES;
+        });
+        
         MarkerDelegate *markerDelegate = [[MarkerDelegate alloc] initWithUrl:@"marker"];
         
         [markerDelegate listAttributesById:^(RKObjectRequestOperation *operation, RKMappingResult *result) {
+            
+            self.currentMarkerAttributes = [[result array] mutableCopy];
             
             NSString *userId = [defaults objectForKey:@"userId"];
             NSString *userRole = [defaults objectForKey:@"userRole"];
@@ -153,9 +201,11 @@ extern NSUserDefaults *defaults;
         } userName:[defaults objectForKey:@"email"] password:[defaults objectForKey:@"password"] markerId:markerId];
     };
     
-    context[@"changeToAddMarker"] = ^(NSString *coordinates) {
+    context[@"showOpenMenuButton"] = ^() {
         
-        [self performSegueWithIdentifier:@"addNewMarkerSegue" sender:self];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self.menuButton.hidden = NO;
+        });
         
     };
     
@@ -194,21 +244,10 @@ extern NSUserDefaults *defaults;
 }
 
 - (void) didUnheckedLayer:(Layer *)layer {
-    if (layer.dataSource.url != nil) {
-        NSRange index = [layer.name rangeOfString:@":"];
-        NSRange position = [layer.dataSource.url rangeOfString:@"geoserver/" options:NSBackwardsSearch];
-        NSString *typeLayer = [layer.name substringWithRange:NSMakeRange(0, index.location)];
-        
-        NSString *urlFormated = [NSString stringWithFormat:@"%@%@/wms", [layer.dataSource.url substringWithRange:NSMakeRange(0, position.location+10)],typeLayer ];
-        
-        NSString *functionCall = [NSString stringWithFormat:@"showLayer('%@', '%@', '%@', false)", urlFormated , layer.name, layer.title];
-        [_webView stringByEvaluatingJavaScriptFromString:functionCall];
-    } else {
-        
-        NSString *functionCall = [NSString stringWithFormat:@"showMarker(null, null, '%@', null, null, null, false)", layer.name];
-        [_webView stringByEvaluatingJavaScriptFromString:functionCall];
-        
-    }
+    
+    NSString *functionCall = [NSString stringWithFormat:@"geocabapp.closeMarker('%@')", layer.id];
+    [_webView stringByEvaluatingJavaScriptFromString:functionCall];
+    
 }
 
 - (void)didReceiveMemoryWarning
@@ -232,127 +271,26 @@ extern NSUserDefaults *defaults;
     [self presentViewController:_layerSelectorNavigator animated:NO completion:nil];
 }
 
-//-(IBAction)addNewPoint:(id)sender {
-//    if (!_addMyLocationButton.hidden) {
-//        [self hideNewMarkerButtons];
-//    } else {
-//        [self showNewMarkerButtons];
-//    }
-//    
-//    
-//    [self hideMarkerOptions];
-//}
-
-//-(void)showNewMarkerButtons {
-//    if (_addMyLocationButton.hidden) {
-//        [UIView animateWithDuration:1
-//                              delay:1.5
-//                            options: UIViewAnimationCurveEaseInOut
-//                         animations:^{
-//                             _addMyLocationButton.hidden = false;
-//                             _addAnotherLocationButton.hidden = false;
-//                         } 
-//                         completion:nil];
-//    }
-//}
-//
-//-(void)hideNewMarkerButtons {
-//    if (!_addMyLocationButton.hidden) {
-//        [UIView animateWithDuration:1
-//                              delay:1.5
-//                            options: UIViewAnimationCurveEaseInOut
-//                         animations:^{
-//                             _addMyLocationButton.hidden = true;
-//                             _addAnotherLocationButton.hidden = true;
-//                         }
-//                         completion:nil];
-//    }
-//}
-
-//- (void) showMarkerOptions {
-//    if (_confirmMarkerButton.hidden) {
-//        [UIView animateWithDuration:1
-//                              delay:1.5
-//                            options: UIViewAnimationCurveEaseInOut
-//                         animations:^{
-//                             _markerOptionsOverlay.hidden = false;
-//                             _confirmMarkerButton.hidden = false;
-//                             _changeMarkerButton.hidden = false;
-//                             _cancelMarkerButton.hidden = false;
-//                         }
-//                         completion:nil];
-//    }
-//        
-//}
-
 - (void)loadWebView
 {
     NSString *path = [[NSBundle mainBundle] pathForResource:@"webview" ofType:@"html" inDirectory:@"/"];
     [_webView loadRequest:[NSURLRequest requestWithURL:[NSURL fileURLWithPath:path]]];
+    _webView.scrollView.scrollEnabled = TRUE;
+    _webView.scalesPageToFit = TRUE;
 }
 
-- (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations {
-    CLLocation *location = [locations lastObject];
-    NSDate *eventDate = location.timestamp;
-    NSTimeInterval howRecent = [eventDate timeIntervalSinceNow];
-    if (abs(howRecent) < 15.0) {
-        NSString *functionCall = [NSString stringWithFormat:@"addPoint(%.5f, %.5f, false)", location.coordinate.latitude, location.coordinate.longitude];
-        [_webView stringByEvaluatingJavaScriptFromString:functionCall];
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    
+    if ([segue.identifier isEqualToString:@"addNewMarkerSegue"]) {
         
-        _location.x = location.coordinate.latitude;
-        _location.y = location.coordinate.longitude;
+        AddNewMarkerViewController *addNewMarkerViewController = (AddNewMarkerViewController*) segue.destinationViewController;
+        addNewMarkerViewController.wktCoordenate = self.wktCoordenate;
+        addNewMarkerViewController.webView = self.webView;
+        addNewMarkerViewController.marker = self.currentMarker;
         
-        [_locationManager stopUpdatingLocation];
-//        [self hideNewMarkerButtons];
-//        [self showMarkerOptions];
-//        if (!_hintLabel.hidden) [UIView animateWithDuration:1  delay:1.5 options: UIViewAnimationCurveEaseInOut animations:^{ _hintLabel.hidden = true;} completion:nil];
-//        if (!_showMarkerOptionsButton.hidden) [UIView animateWithDuration:1  delay:1.5 options: UIViewAnimationCurveEaseInOut animations:^{ _showMarkerOptionsButton.hidden = true;} completion:nil];
     }
+    
 }
-
-//- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-//    if ([segue.identifier isEqualToString:@"addNewMarkerSegue"]) {
-//        
-//        NSLog(@"%.5f  %.5f", _locationManager.location.coordinate.latitude, _locationManager.location.coordinate.longitude);
-//        
-//        AddNewMarkerViewController *addNewMarkerViewController = (AddNewMarkerViewController*) segue.destinationViewController;
-//        addNewMarkerViewController.latitude = _location.x;
-//        addNewMarkerViewController.longitude = _location.y;
-//    }
-//}
-
--(IBAction)addCurrentLocation:(id)sender {
-    if (SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"8.0")){
-        [_locationManager requestWhenInUseAuthorization];
-    }
-    [_locationManager startUpdatingLocation];
-}
-
-//-(IBAction)addSelectedLocation:(id)sender {
-//    [self hideNewMarkerButtons];
-//    [self hideMarkerOptions];
-//    [UIView animateWithDuration:1  delay:1.5 options: UIViewAnimationCurveEaseInOut animations:^{ _hintLabel.hidden = !_hintLabel.hidden;} completion:nil];
-//    [_webView stringByEvaluatingJavaScriptFromString:@"bindTouchEvent()"];
-//}
-
--(void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
-    if (buttonIndex == 0) {
-        if (SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"8.0")){
-            [_locationManager requestWhenInUseAuthorization];
-        }
-        [_locationManager startUpdatingLocation];
-    }
-}
-
-//- (IBAction)changeMarkerRegistration:(id)sender {
-//    [self hideMarkerOptions];
-//    [self hideNewMarkerButtons];
-//    
-//    [UIView animateWithDuration:1  delay:1.5 options: UIViewAnimationCurveEaseInOut animations:^{ _hintLabel.hidden = false; } completion:nil];
-//    if (!_showMarkerOptionsButton.hidden) [UIView animateWithDuration:1  delay:1.5 options: UIViewAnimationCurveEaseInOut animations:^{ _showMarkerOptionsButton.hidden = true; } completion:nil];
-//    
-//    [_webView stringByEvaluatingJavaScriptFromString:@"bindTouchEvent()"];
-//}
 
 - (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error {
     NSLog(@"didFailWithError: %@", error);
@@ -378,8 +316,6 @@ extern NSUserDefaults *defaults;
         case 0:
             break;
         case 1: {
-//            UINavigationController *navigationController = [[UIStoryboard storyboardWithName:@"Main" bundle:[NSBundle mainBundle]] instantiateViewControllerWithIdentifier:@"navigationController"];
-//            [[[[UIApplication sharedApplication] delegate] window] setRootViewController:navigationController];
             
             defaults = [NSUserDefaults standardUserDefaults];
             NSDictionary * dict = [defaults dictionaryRepresentation];

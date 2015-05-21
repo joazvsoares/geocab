@@ -24,4 +24,6 @@
 @property (nonatomic) BOOL accountNonLocked;
 @property (nonatomic) BOOL accountNonExpired;
 
++ (NSDictionary *) generateDictionary;
+
 @end

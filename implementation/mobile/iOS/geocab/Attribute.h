@@ -18,5 +18,9 @@
 @property (nonatomic) BOOL required;
 @property (nonatomic) BOOL attributeDefault;
 @property (nonatomic, retain) Layer *layer;
+@property (nonatomic, retain) UIView *viewComponent;
+
+- (NSString *)getViewComponentValue;
++ (NSDictionary *) generateDictionary;
 
 @end

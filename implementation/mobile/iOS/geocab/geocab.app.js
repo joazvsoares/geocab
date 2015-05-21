@@ -1,3 +1,9 @@
+//
+//  geocab.app.js
+//
+//  Created by Joaz Vieira Soares on 05/05/15.
+//  Copyright (c) 2014 Itaipu.
+//
 
 var geocabapp = function(){
 
@@ -138,13 +144,11 @@ var geocabapp = function(){
 		 */
 		addMarker : function(marker) {
             
-            if ( typeof markers === 'string' )
+            if ( typeof marker === 'string' )
 				marker = JSON.parse(marker);
 
 			var layerIcon = this.getAssetsPath() + marker.layer.icon.substring(marker.layer.icon.lastIndexOf('/')+1);
             
-            layerIcon = 'recycle.png';
-
 			var iconFeature = new ol.Feature({
 				geometry: new ol.format.WKT().readGeometry(marker.wktCoordenate),
 				markerId: marker.id
@@ -206,7 +210,7 @@ var geocabapp = function(){
 		
 		/**
 		 * Busca um marker pelo id
-		 */				
+		 */
 		findMarker : function(markerId){
 			for (i in markersAdd) {
 				if (markersAdd[i].marker.id == markerId) {
