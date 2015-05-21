@@ -113,7 +113,7 @@ public class LayerDelegate extends AbstractDelegate
      */
     public void listInternalLayers(final DelegateHandler delegateHandler)
     {
-        String url = "http://geocab.sbox.me/layergroup/internal/layers";
+        String url = "http://geocab.itaipu.gov.br/layergroup/internal/layers";
 
         JsonArrayRequest jReq = new JsonArrayRequest(url, new Response.Listener<JSONArray>() {
 
@@ -171,7 +171,7 @@ public class LayerDelegate extends AbstractDelegate
      */
     public void listAttributesByLayer(long layerId, final DelegateHandler delegateHandler)
     {
-        String url = "http://geocab.sbox.me/layergroup" + "/"+layerId+"/layerattributes";
+        String url = "http://geocab.itaipu.gov.br/layergroup" + "/"+layerId+"/layerattributes";
 
         JsonArrayRequest jReq = new JsonArrayRequest(url, new Response.Listener<JSONArray>() {
 
