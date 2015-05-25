@@ -35,6 +35,7 @@
                                       placeholder="<spring:message code="admin.access-group.Enter-the-description"/>"
                                       name="description"
                                       required ng-minlength="1"
+                                      maxlength="255"
                                       ng-class="{ ngInvalid: form.description.$error.required && (form.$submitted || form.description.$dirty) }"
                                       ng-hover>
                             <span ng-show="form.description.$error.required && (form.$submitted || form.description.$dirty)" class="tooltip-validation"><spring:message code="admin.access-group.Description-required"/></span>
