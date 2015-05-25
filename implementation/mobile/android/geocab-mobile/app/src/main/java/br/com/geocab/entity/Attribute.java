@@ -152,7 +152,7 @@ public class Attribute implements Serializable
 
     public String getViewComponentValue(){
 
-        if ( this.getType() == AttributeType.TEXT || this.getType() == AttributeType.NUMBER ){
+        if ( this.getType() == AttributeType.TEXT || this.getType() == AttributeType.NUMBER || this.getType() == AttributeType.DATE ){
             return ((EditText) this.viewComponent).getText().toString();
 
         } else if ( this.getType() == AttributeType.BOOLEAN ){

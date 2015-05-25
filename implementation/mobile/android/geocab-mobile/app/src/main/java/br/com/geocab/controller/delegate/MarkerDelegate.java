@@ -174,7 +174,7 @@ public class MarkerDelegate extends AbstractDelegate
      */
     public void downloadMarkerPicture(final Marker marker, final DelegateHandler delegateHandler)
     {
-        String url =  "http://geocab.sbox.me/files/markers/"+marker.getId()+"/download";
+        String url =  "http://geocab.itaipu.gov.br/files/markers/"+marker.getId()+"/download";
         //String url = "http://192.168.0.45:8080/geocab/files/markers/"+marker.getId()+"/download";
 
         ImageRequest jReq = new ImageRequest(url, new Response.Listener<Bitmap>() {
@@ -274,7 +274,7 @@ public class MarkerDelegate extends AbstractDelegate
     public void uploadMarkerFile( long markerId, File file, final DelegateHandler delegateHandler){
 
         //String url = "http://192.168.0.45:8080/geocab/marker/"+markerId+"/uploadphoto";
-        String url = "http://geocab.sbox.me/marker/"+markerId+"/uploadphoto";
+        String url = "http://geocab.itaipu.gov.br/marker/"+markerId+"/uploadphoto";
 
         MultiPartRequest request = new MultiPartRequest(url, file, new Response.Listener<String>() {
             @Override
@@ -310,7 +310,7 @@ public class MarkerDelegate extends AbstractDelegate
     public void insertMarker( final Marker marker, final DelegateHandler delegateHandler )
     {
         //String url = "http://192.168.0.45:8080/geocab/marker/";
-        String url = "http://geocab.sbox.me/marker/";
+        String url = "http://geocab.itaipu.gov.br/marker/";
         final Gson gson = new GsonBuilder().create();
 
         try {
@@ -357,7 +357,7 @@ public class MarkerDelegate extends AbstractDelegate
     public void updateMarker( final Marker marker, final DelegateHandler delegateHandler )
     {
         //String url = "http://192.168.0.45:8080/geocab/marker/";
-        String url = "http://geocab.sbox.me/marker/";
+        String url = "http://geocab.itaipu.gov.br/marker/";
         final Gson gson = new GsonBuilder().create();
 
         try {
@@ -404,7 +404,7 @@ public class MarkerDelegate extends AbstractDelegate
     public void approveMarker( final long markerId, final DelegateHandler delegateHandler )
     {
         //String url = "http://192.168.0.45:8080/geocab/marker/"+markerId+"/approve";
-        String url = "http://geocab.sbox.me/marker/"+markerId+"/approve";
+        String url = "http://geocab.itaipu.gov.br/marker/"+markerId+"/approve";
         final Gson gson = new GsonBuilder().create();
 
         try {
@@ -448,7 +448,7 @@ public class MarkerDelegate extends AbstractDelegate
      */
     public void refuseMarker( final long markerId, final DelegateHandler delegateHandler )
     {
-        String url = "http://geocab.sbox.me/marker/"+markerId+"/refuse";
+        String url = "http://geocab.itaipu.gov.br/marker/"+markerId+"/refuse";
         final Gson gson = new GsonBuilder().create();
 
         try {
@@ -492,7 +492,7 @@ public class MarkerDelegate extends AbstractDelegate
      */
     public void removeMarker( final long markerId, final DelegateHandler delegateHandler )
     {
-        String url = "http://geocab.sbox.me/marker/"+markerId;
+        String url = "http://geocab.itaipu.gov.br/marker/"+markerId;
         final Gson gson = new GsonBuilder().create();
 
         try {

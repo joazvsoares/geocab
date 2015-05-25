@@ -164,7 +164,7 @@ public class MarkerActivity extends Activity {
                     linearPainel.addView(textView);
 
                     // Verifica o tipo do atributo e cria o elemento de acordo
-                    if ( attribute.getType() == AttributeType.TEXT || attribute.getType() == AttributeType.NUMBER ){
+                    if ( attribute.getType() == AttributeType.TEXT || attribute.getType() == AttributeType.NUMBER || attribute.getType() == AttributeType.DATE ){
                         EditText editText = (EditText) getLayoutInflater().inflate(R.layout.style_edit_text, null);
                         editText.setText(markerValue);
 
@@ -227,7 +227,7 @@ public class MarkerActivity extends Activity {
                 if (options[item].equals("Tirar foto"))
                 {
                     Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    File f = new File(android.os.Environment.getExternalStorageDirectory(), "temp.jpg");
+                    File f = new File(android.os.Environment.getExternalStorageDirectory(), "geocab-temp.jpg");
                     intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(f));
                     startActivityForResult(intent, 1);
                 }
@@ -249,9 +249,6 @@ public class MarkerActivity extends Activity {
      * @param v
      */
     public void saveMarker(View v){
-
-        this.marker.setStatus(MarkerStatus.PENDING);
-        this.marker.setWktCoordenate(this.wktCoordenate);
 
         final Layer layer = (Layer) ( (Spinner) findViewById(R.id.spinner_layers) ).getSelectedItem();
         this.marker.setLayer(layer);
@@ -283,6 +280,9 @@ public class MarkerActivity extends Activity {
         // Chamada ao serviço para persistir o marker
         if ( this.marker.getId() == null || this.marker.getId() == 0 )
         {
+            this.marker.setStatus(MarkerStatus.PENDING);
+            this.marker.setWktCoordenate(this.wktCoordenate);
+
             markerDelegate.insertMarker(marker, new DelegateHandler<Marker>() {
                 @Override
                 public void responseHandler(Marker markerResponse) {
@@ -354,7 +354,7 @@ public class MarkerActivity extends Activity {
             if (requestCode == 1) {
                 File f = new File(Environment.getExternalStorageDirectory().toString());
                 for (File temp : f.listFiles()) {
-                    if (temp.getName().equals("temp.jpg")) {
+                    if (temp.getName().equals("geocab-temp.jpg")) {
                         f = temp;
                         break;
                     }
@@ -369,22 +369,9 @@ public class MarkerActivity extends Activity {
                     MarkerActivity.this.marker.setFile(f);
                     //f.delete();
 
-                    String path = android.os.Environment.getExternalStorageDirectory() + File.separator + "Phoenix" + File.separator + "default";
+                    String path = android.os.Environment.getExternalStorageDirectory() + File.separator + "Geocab" + File.separator + "default";
                     OutputStream outFile = null;
                     File file = new File(path, String.valueOf(System.currentTimeMillis()) + ".jpg");
-
-//                    try {
-//                        outFile = new FileOutputStream(file);
-//                        bitmap.compress(Bitmap.CompressFormat.JPEG, 85, outFile);
-//                        outFile.flush();
-//                        outFile.close();
-//                    } catch (FileNotFoundException e) {
-//                        e.printStackTrace();
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    } catch (Exception e) {
-//                        e.printStackTrace();
-//                    }
 
                 } catch (Exception e) {
                     e.printStackTrace();
