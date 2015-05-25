@@ -251,10 +251,6 @@ BOOL animating;
             });
         });
         
-//        cell.legendImage.image = [UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:layer.legend]]];
-//        dispatch_async(dispatch_get_main_queue(), ^{
-//            cell.legendImage.image = [UIImage imageNamed:iconName];
-//        });
     } else {
         NSRange position = [layer.icon rangeOfString:@"/" options:NSBackwardsSearch];
         NSString *iconName = [layer.icon substringWithRange:NSMakeRange(position.location+1, layer.icon.length - (position.location + 1))];

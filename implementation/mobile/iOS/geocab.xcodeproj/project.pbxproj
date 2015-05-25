@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 47;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -2681,16 +2681,16 @@
 				ORGANIZATIONNAME = Itaipu;
 				TargetAttributes = {
 					5D960B7F19CA1EC600B8DEFF = {
-						DevelopmentTeam = NU7JM4SJD2;
+						DevelopmentTeam = UE55GE739N;
 					};
 					5D960BA019CA1EC600B8DEFF = {
-						DevelopmentTeam = NU7JM4SJD2;
+						DevelopmentTeam = UE55GE739N;
 						TestTargetID = 5D960B7F19CA1EC600B8DEFF;
 					};
 				};
 			};
 			buildConfigurationList = 5D960B7B19CA1EC600B8DEFF /* Build configuration list for PBXProject "geocab" */;
-			compatibilityVersion = "Xcode 3.2";
+			compatibilityVersion = "Xcode 6.3";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -3676,6 +3676,7 @@
 				INFOPLIST_FILE = "geocab/geocab-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
+				TARGETED_DEVICE_FAMILY = 1;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -3693,6 +3694,7 @@
 				INFOPLIST_FILE = "geocab/geocab-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
+				TARGETED_DEVICE_FAMILY = 1;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
@@ -3753,7 +3755,7 @@
 				5D960BB119CA1EC600B8DEFF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		5D960BB219CA1EC600B8DEFF /* Build configuration list for PBXNativeTarget "geocab" */ = {
 			isa = XCConfigurationList;
@@ -3762,7 +3764,7 @@
 				5D960BB419CA1EC600B8DEFF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		5D960BB519CA1EC600B8DEFF /* Build configuration list for PBXNativeTarget "geocabTests" */ = {
 			isa = XCConfigurationList;
@@ -3771,7 +3773,7 @@
 				5D960BB719CA1EC600B8DEFF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};

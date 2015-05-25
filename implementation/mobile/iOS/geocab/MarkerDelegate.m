@@ -199,6 +199,10 @@
     [mappingLayer addAttributeMappingsFromDictionary: [Layer generateDictionary]];
     [requestMapping addPropertyMapping:[RKRelationshipMapping relationshipMappingFromKeyPath:@"layer" toKeyPath:@"layer" withMapping:mappingLayer]];
     
+    RKObjectMapping *mappingUser = [RKObjectMapping requestMapping];
+    [mappingUser addAttributeMappingsFromDictionary: @{@"id":@"id"}];
+    [requestMapping addPropertyMapping:[RKRelationshipMapping relationshipMappingFromKeyPath:@"user" toKeyPath:@"user" withMapping:mappingUser]];
+    
     // MarkerAttribute
     RKObjectMapping *mappingMarkerAttr = [RKObjectMapping requestMapping];
     [mappingMarkerAttr addAttributeMappingsFromDictionary: [MarkerAttribute generateDictionary]];
